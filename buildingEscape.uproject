@@ -12,5 +12,20 @@
 				"Engine"
 			]
 		}
+	],
+	"Plugins": [
+		{
+			"Name": "VRayForUnreal",
+			"Enabled": true
+		},
+		{
+			"Name": "VRayTeleportBP",
+			"Enabled": true
+		},
+		{
+			"Name": "SocketIOClient",
+			"Enabled": true,
+			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/770c3db686a948e09ccb208705a8e736"
+		}
 	]
 }
