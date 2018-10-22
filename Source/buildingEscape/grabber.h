@@ -23,6 +23,7 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	
 
 private:
 
@@ -30,4 +31,20 @@ private:
 	FVector RayCastV;
 	float ScalarReach{ 100.f };
 	FHitResult Hit;
+
+	UPhysicsHandleComponent* PhysicsHandle = nullptr;
+
+	UInputComponent* InputComponent = nullptr;
+
+	void Grab();
+
+	void Released();
+
+	void FindPhysicsHandle();
+
+	void SetupInputComponent();
+
+	const FHitResult GetFirstPhysicsBodyInReach();
+	
+
 };

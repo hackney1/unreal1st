@@ -19,8 +19,9 @@ void Ugrabber::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
-	
+	FindPhysicsHandle();
+	SetupInputComponent();
+
 }
 
 
@@ -28,7 +29,6 @@ void Ugrabber::BeginPlay()
 void Ugrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
 
 	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(RayCastV, RayCast);
 
@@ -41,10 +41,77 @@ void Ugrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
 		TraceParameters);
 
-	AActor* ActorHit = Hit.GetActor();
+	if (PhysicsHandle->GrabbedComponent)
+	{
+		PhysicsHandle->SetTargetLocation(LineTraceEnd);
+	}
+
+}
+
+void Ugrabber::Grab()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Grab pressed"))
+
+	auto HitResult = GetFirstPhysicsBodyInReach();
+
+	auto ComponentToGrab = HitResult.GetComponent();
+	auto ActorHit = HitResult.GetActor();
+
 	if (ActorHit)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("hit trace: %s"), *(ActorHit->GetName()))
+		PhysicsHandle->GrabComponent(ComponentToGrab, NAME_None, ComponentToGrab->GetOwner()->GetActorLocation(), true);
+	}
+
+}
+
+void Ugrabber::Released()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Released"))
+
+	PhysicsHandle->ReleaseComponent();
+}
+
+void Ugrabber::FindPhysicsHandle()
+{
+	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
+	if (PhysicsHandle)
+	{
+		//Physics Handle Found
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Error: PhysicsHandle of %S is missing"), *GetOwner()->GetName())
 	}
 }
 
+void Ugrabber::SetupInputComponent()
+{
+	InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
+	if (InputComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Iput Component found!"))
+			InputComponent->BindAction("Grab", IE_Pressed, this, &Ugrabber::Grab);
+		InputComponent->BindAction("Grab", IE_Released, this, &Ugrabber::Released);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Error: InputComponent of %S is missing"), *GetOwner()->GetName())
+	}
+}
+
+const FHitResult Ugrabber::GetFirstPhysicsBodyInReach()
+{
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(RayCastV, RayCast);
+
+	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());
+
+	auto LineTraceEnd = RayCastV + RayCast.Vector() * ScalarReach;
+
+
+	GetWorld()->LineTraceSingleByObjectType(Hit, RayCastV, LineTraceEnd,
+		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
+		TraceParameters);
+
+	AActor* ActorHit = Hit.GetActor();
+	return Hit;
+}
