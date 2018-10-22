@@ -21,7 +21,6 @@ void UOpenDoor::BeginPlay()
 	Super::BeginPlay();
 
 	Owner = GetOwner();
-	ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
 	
 }
 
@@ -43,7 +42,7 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 	auto CurrentTick = GetWorld()->GetTimeSeconds();
 
-	if (PressurePlate->IsOverlappingActor(ActorThatOpens))
+	if (GetMassOnPlate() > MassLimit )
 	{
 		OpenDoor();
 		LastDoorOpenTime = GetWorld()->GetTimeSeconds();
@@ -52,5 +51,22 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	{
 		CloseDoor();
 	}
-}	
+}
+float UOpenDoor::GetMassOnPlate()
+{
+	TArray<AActor*> OverLappingActors;
+	float MassOnPlate = 0.0f;
+
+	PressurePlate->GetOverlappingActors(OverLappingActors);
+
+	for (auto* Actor : OverLappingActors)
+	{
+		
+		UE_LOG(LogTemp, Warning, TEXT("Name: %s"), *Actor->GetName())
+		MassOnPlate += Actor->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+	}
+
+	return MassOnPlate;
+}
+
 

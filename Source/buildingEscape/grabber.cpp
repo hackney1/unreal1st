@@ -30,28 +30,15 @@ void Ugrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(RayCastV, RayCast);
-
-	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());
-
-	auto LineTraceEnd = RayCastV + RayCast.Vector() * ScalarReach;
-
-
-	GetWorld()->LineTraceSingleByObjectType(Hit, RayCastV, LineTraceEnd,
-		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
-		TraceParameters);
-
 	if (PhysicsHandle->GrabbedComponent)
 	{
-		PhysicsHandle->SetTargetLocation(LineTraceEnd);
+		PhysicsHandle->SetTargetLocation(GetReachLineEnd());
 	}
 
 }
 
 void Ugrabber::Grab()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Grab pressed"))
-
 	auto HitResult = GetFirstPhysicsBodyInReach();
 
 	auto ComponentToGrab = HitResult.GetComponent();
@@ -66,19 +53,13 @@ void Ugrabber::Grab()
 
 void Ugrabber::Released()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Released"))
-
 	PhysicsHandle->ReleaseComponent();
 }
 
 void Ugrabber::FindPhysicsHandle()
 {
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
-	if (PhysicsHandle)
-	{
-		//Physics Handle Found
-	}
-	else
+	if (PhysicsHandle == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Error: PhysicsHandle of %S is missing"), *GetOwner()->GetName())
 	}
@@ -90,7 +71,7 @@ void Ugrabber::SetupInputComponent()
 	if (InputComponent)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Iput Component found!"))
-			InputComponent->BindAction("Grab", IE_Pressed, this, &Ugrabber::Grab);
+		InputComponent->BindAction("Grab", IE_Pressed, this, &Ugrabber::Grab);
 		InputComponent->BindAction("Grab", IE_Released, this, &Ugrabber::Released);
 	}
 	else
@@ -101,17 +82,28 @@ void Ugrabber::SetupInputComponent()
 
 const FHitResult Ugrabber::GetFirstPhysicsBodyInReach()
 {
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(RayCastV, RayCast);
-
 	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());
 
-	auto LineTraceEnd = RayCastV + RayCast.Vector() * ScalarReach;
-
-
-	GetWorld()->LineTraceSingleByObjectType(Hit, RayCastV, LineTraceEnd,
+	GetWorld()->LineTraceSingleByObjectType(Hit, GetReachLineStart(), GetReachLineEnd(),
 		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
 		TraceParameters);
 
 	AActor* ActorHit = Hit.GetActor();
 	return Hit;
+}
+FVector Ugrabber::GetReachLineStart()
+{
+	 GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(RayCastV, RayCast);
+
+	 return RayCastV;
+}
+
+FVector	Ugrabber::GetReachLineEnd()
+{
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(RayCastV, RayCast);
+
+	auto LineTraceEnd = RayCastV + RayCast.Vector() * ScalarReach;
+
+	return LineTraceEnd;
+
 }
