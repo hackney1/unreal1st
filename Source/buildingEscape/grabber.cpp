@@ -78,7 +78,7 @@ void Ugrabber::SetupInputComponent()
 	InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
 	if (InputComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Iput Component found!"))
+		UE_LOG(LogTemp, Warning, TEXT("Input Component found!"))
 		InputComponent->BindAction("Grab", IE_Pressed, this, &Ugrabber::Grab);
 		InputComponent->BindAction("Grab", IE_Released, this, &Ugrabber::Released);
 	}
